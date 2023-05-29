@@ -1,0 +1,110 @@
+const { ButtonBuilder, ButtonStyle, EmbedBuilder, ActionRowBuilder } = require("discord.js");
+const lifeSchema = require("../../models/lifeSchema")
+module.exports = {
+  name: "give",
+  description: "Chuyển tiền, giao dịch và trở thành một thương nhân thực sự! JOB chuyên dụng : Thương Gia!",
+  description2: 'Sending money to someone',
+  usage2: "Ygive + <tag> + <amount>",
+  aliases: ['ct', 'send', 'tf'],
+  usages: `Ygive + <tag> + <số tiền>`,
+  cooldown: 2000,
+  cderror: 'đừng vội thế chứ, bạn vừa gõ lệnh mà',
+  use: "dùng lại nhé <3",
+  cderror2: 'don\'t rush, you\'ve just use this command',
+  use2: "to use again <3",
+  /**
+   * @param {Client} client
+   * @param {Message} message
+   * @param {String[]} args
+   */
+  run: async (client, message, args) => {
+
+    let timeout = 3000
+    let lastused = await client.cd(message.author.id, `give`)
+    let used = client.checkcd(lastused, timeout)
+    let cooldown = used.after
+    if (!cooldown) {
+      const giveToFast = [
+        `${client.emo.fail} | **${message.author.username}**, bạn ơi give chậm thôi..`,
+        `${client.emo.fail} | **${message.author.username}**, please slow down, you're making me confused...`
+      ]
+      const delay = await client.send(client, message, giveToFast, null)
+      await client.sleep(timeout - (Date.now() - lastused))
+      await delay.delete()
+    }
+    else {
+      await client.timeout(message.author.id, `give`)
+      const user = message.mentions.members.first() || client.users.cache.find(u => u.id == args[0] || u.id == args[1]);
+      let errorUser = [
+        "**Bạn muốn chuyển cho ai?**",
+        "**Neh.. who? Please mention someone!**"
+      ]
+      if (!user) return await client.reply(client, message, errorUser, null).catch(e => console.log(e))
+      let errorSendToYourSelf = [
+        "**Không làm muốn có ăn? Buff tiền hay gì...**",
+        "**Neh.. silly! It's your, no need to send!**"
+      ]
+      if (user.id == message.author.id || message.mentions.members.first() == message.author) return await client.reply(client, message, errorSendToYourSelf, null).catch(e => console.log(e))
+
+      let coinsToGive = args[1]
+      if (args[1].includes(user.id)) coinsToGive = args[0]
+      let errorCoinsToGive = [
+        "**Bạn muốn chuyển bao nhiêu nè...**",
+        "**Yoooo! Missing amount...**"
+      ]
+      if (!coinsToGive)
+        return await client.reply(client, message, errorCoinsToGive, null).catch(e => console.log(e))
+      let errorCoinsIsNaN = [
+        "**Số tiền không hợp lệ...**",
+        "**Yoooo! The amount must be an integer...**"
+      ]
+      if (isNaN(coinsToGive))
+        return await client.reply(client, message, errorCoinsIsNaN, null).catch(e => console.log(e))
+      let errorZero = [
+        "**Bạn không thể nhập số âm...**",
+        "**Yoooo! The amount must be an integer that greater than 0...**"
+      ]
+      if ((parseInt(coinsToGive) <= 0))
+        return await client.reply(client, message, errorZero, null).catch(e => console.log(e))
+
+
+      const convertedGive = parseInt(coinsToGive);
+      let errorEnough = [
+        "Ehem... Đỗ nghèo khỉ... check tiền lại đi!",
+        "Ehem... Poor little one... check your balance first!"
+      ]
+      if ((await client.cash(message.author.id)) < convertedGive)
+        return await client.reply(client, message, errorEnough, null).catch(e => console.log(e))
+      await client.tru(message.author.id, convertedGive);
+      await client.cong(user.id, convertedGive);
+      const userProfile = await lifeSchema.findOne({ authorid: user.id })
+
+
+      if (message.author.id === '896739787392819240') {
+        message.channel.send(`<a:Yvip:919967591307550740> **| ${user.username ? user.username : user.user.username}**, bạn đã được <:yu_lavie:920097925395259452> **__Yukii__** <:yu_lavie:920097925395259452> ban cho **${convertedGive.toLocaleString('En-us')} Ycoin**`)
+      }
+      else if (message.author.id === '614071069870915585') {
+        message.channel.send(`<a:Ylacdit:941615907363495936> **${message.author.username}** cho **${user.username ? user.username : user.user.username}** **${convertedGive.toLocaleString('En-us')} Ycoin** mua đá nè <a:Ylacdit:941615907363495936>`)
+      }
+      else if (message.author.id === '748245489476173865') {
+        message.channel.send(`<a:Yngoisaohivong:919968345418268714> | **En sẽ tình** đã cho **${user.username ? user.username : user.user.username}** **${convertedGive.toLocaleString('En-us')} Ycoin** để đá phò cùng **En** <:Yhun:908822217285066772>`)
+      }
+      else if (message.author.id === '696893548863422494') {
+        message.channel.send(`<a:Ylacdit:941615907363495936> | **Phan Kha** đã gửi cho **${user.username ? user.username : user.user.username}** **${convertedGive.toLocaleString('En-us')} Ycoin **<:Yhun:908822217285066772>`)
+      }
+      else if (message.author.id === '893688556965466152') {
+        message.channel.send(`<a:MR_Dc_frozen:911687840352591912> **${user.username ? user.username : user.user.username}**, bạn đã được <:ymitt:972986149616361503> **Mít** <:ymitt:972986149616361503> cho **${convertedGive.toLocaleString('En-us')} ngàn** để đi hotel <a:Ylacmong:925548999182782474>`)
+      }
+      else {
+        const givenMessage = [
+          `<a:banking:937082483466448896> **| ${message.author.username}**, bạn đã chuyển **${convertedGive.toLocaleString('En-us')} Ycoin** cho **${user.username ? user.username : user.user.username}**`,
+          `<a:banking:937082483466448896> **| ${message.author.username}**, you've sent **${convertedGive.toLocaleString('En-us')} Ycoin** to **${user.username ? user.username : user.user.username}**`
+        ]
+        await client.send(client, message, givenMessage, null).catch(e => console.log(e))
+      }
+      if (!userProfile || userProfile.stat.happiness > 98) return
+      userProfile.stat.happiness += 2
+      await userProfile.save()
+    }
+  }
+}
